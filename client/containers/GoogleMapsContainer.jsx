@@ -51,14 +51,6 @@ class GoogleMapsContainer extends React.Component {
   }
 
   render() {
-    const style = {
-      width: "100%",
-      height: "100%",
-      position: "absolute",
-      top: 0,
-      left: 0
-    };
-
     const GoogleMapComponent = withScriptjs(
       withGoogleMap(props => {
         //create an array of the Marker components
