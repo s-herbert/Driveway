@@ -6,6 +6,7 @@ import DialogTitle from "@material-ui/core/DialogTitle";
 import Input from "@material-ui/core/Input";
 import { withStyles } from "@material-ui/core/styles";
 import * as actions from "../actions/actions";
+import {FormGroup, ControlLabel, FormControl} from "react-bootstrap";
 
 const styles = theme => ({
   textField: {
@@ -73,6 +74,27 @@ class CreateDriveway extends Component {
       }
     };
     const { classes } = this.props;
+    let hours = [];
+    for (let i = 0; i < 24; i++) {
+      hours.push(<option value={String(i)}>{i}</option>);
+    }
+
+    const TimeDropDown = props => {
+      return (
+        <FormGroup
+          controlId="timePicker"
+        >
+          <ControlLabel>Start</ControlLabel>
+          <FormControl componentClass="select" placeholder="Pick a Start Time">
+            {hours}
+          </FormControl>
+          <ControlLabel>End</ControlLabel>
+          <FormControl componentClass="select" placeholder="Pick an End Time">
+            {hours}
+          </FormControl>
+        </FormGroup>
+      )
+    }
 
     return (
       <div className="flexRow">
@@ -123,22 +145,7 @@ class CreateDriveway extends Component {
                   name="zip"
                   className={classes.textField}
                 />
-                <Input
-                  error
-                  style={style.text}
-                  id="timeStart"
-                  placeholder="Start Time"
-                  name="timeStart"
-                  className={classes.textField}
-                />
-                <Input
-                  error
-                  style={style.text}
-                  id="timeEnd"
-                  placeholder="End Time"
-                  name="timeEnd"
-                  className={classes.textField}
-                />
+                <TimeDropDown error id={"timeStart"} />
               </div>
             ) : (
               <div>
@@ -170,20 +177,7 @@ class CreateDriveway extends Component {
                   name="zip"
                   className={classes.textField}
                 />
-                <Input
-                  style={style.text}
-                  id="timeStart"
-                  placeholder="Start Time"
-                  name="timeStart"
-                  className={classes.textField}
-                />
-                <Input
-                  style={style.text}
-                  id="timeEnd"
-                  placeholder="End Time"
-                  name="timeEnd"
-                  className={classes.textField}
-                />
+                <TimeDropDown  id={"timeEnd"} />
               </div>
             )}
             <Input
