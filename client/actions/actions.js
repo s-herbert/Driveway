@@ -12,9 +12,23 @@ export const createDriveway = data => ({
   type: types.CREATE_DRIVEWAY,
   payload: data
 });
-export const creationError = () => ({
-  type: types.CREATION_ERROR
+export const errorIncomplete = () => ({
+  type: types.INCOMPLETE
 });
+
+export const errorEndBeforeStart = () => ({
+  type: types.END_BEFORE_START
+})
+
+export const setCreateStart = startTime => ({
+  type: types.SET_CREATE_START,
+  payload: startTime
+})
+
+export const setCreateEnd = endTime => ({
+  type: types.SET_CREATE_END,
+  payload: endTime
+})
 
 // add a location search value to the store
 export const updateSearchInput = searchInput => ({

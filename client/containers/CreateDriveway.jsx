@@ -1,12 +1,14 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import Button from "@material-ui/core/Button";
+import InsertPhotoIcon from "@material-ui/icons/InsertPhoto";
 import Dialog from "@material-ui/core/Dialog";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import Input from "@material-ui/core/Input";
+import MenuItem from "@material-ui/core/MenuItem";
+import Select from "@material-ui/core/Select";
 import { withStyles } from "@material-ui/core/styles";
 import * as actions from "../actions/actions";
-import {FormGroup, ControlLabel, FormControl} from "react-bootstrap";
 
 const styles = theme => ({
   textField: {
@@ -14,23 +16,45 @@ const styles = theme => ({
     marginRight: theme.spacing.unit,
     width: 200,
     color: "#00352F"
+  },
+  root: {
+    display: "flex",
+    flexWrap: "wrap"
   }
 });
 
-const validateData = function() {
-  return (
-    this.get("address") &&
-    this.get("city") &&
-    this.get("state") &&
-    this.get("zip") &&
-    this.get("timeStart") &&
-    this.get("timeEnd")
-  );
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: 100,
+      width: 250
+    }
+  }
+};
+
+const fullFields = function() {
+  if (
+    !//these fields are missing
+    (
+      this.get("address") &&
+      this.get("city") &&
+      this.get("state") &&
+      this.get("zip") &&
+      this.get("start") &&
+      this.get("end")
+    )
+  )
+    return false;
+
+  return true;
 };
 
 const mapStateToProps = store => ({
   createDrivewayModal: store.driveways.createDrivewayModal,
-  submitError: store.driveways.submitError
+  submitError: store.driveways.submitError,
+  timeError: store.driveways.timeError,
+  startTime: store.driveways.startTime,
+  endTime: store.driveways.endTime
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -43,14 +67,21 @@ const mapDispatchToProps = dispatch => ({
     const data = new FormData(event.target);
     const form = document.querySelector("#createDrivewayForm");
     form.classList.remove("shake");
-    data.isValid = validateData;
-    if (data.isValid()) {
-      return dispatch(actions.createDriveway(data));
+    data.isComplete = fullFields;
+    if (data.isComplete()) {
+      if (data.hasValidTimes()) {
+        return dispatch(actions.createDriveway(data));
+      } else {
+        return dispatch(actions.errorEndBeforeStart());
+      }
     } else {
       form.classList.add("shake");
-      return dispatch(actions.creationError());
+      return dispatch(actions.errorIncomplete());
     }
-  }
+  },
+  handleStartChange: event =>
+    dispatch(actions.setCreateStart(event.target.value)),
+  handleEndChange: event => dispatch(actions.setCreateEnd(event.target.value))
 });
 
 class CreateDriveway extends Component {
@@ -64,6 +95,11 @@ class CreateDriveway extends Component {
         height: "400px",
         overflow: "scroll"
       },
+      select: {
+        width: 200,
+        height: 30,
+        margin: "10px"
+      },
       text: {
         width: 200,
         height: 30,
@@ -76,28 +112,15 @@ class CreateDriveway extends Component {
     const { classes } = this.props;
     let hours = [];
     for (let i = 0; i < 24; i++) {
-      hours.push(<option value={String(i)}>{i}</option>);
-    }
-
-    const TimeDropDown = props => {
-      return (
-        <FormGroup
-          controlId="timePicker"
-        >
-          <ControlLabel>Start</ControlLabel>
-          <FormControl componentClass="select" placeholder="Pick a Start Time">
-            {hours}
-          </FormControl>
-          <ControlLabel>End</ControlLabel>
-          <FormControl componentClass="select" placeholder="Pick an End Time">
-            {hours}
-          </FormControl>
-        </FormGroup>
-      )
+      hours.push(
+        <MenuItem key={i} value={i}>
+          {String(i)}
+        </MenuItem>
+      );
     }
 
     return (
-      <div className="flexRow">
+      <div className={classes.root}>
         <Button variant="contained" onClick={this.props.handleOpen}>
           Create Driveway!
         </Button>
@@ -111,75 +134,74 @@ class CreateDriveway extends Component {
             Create a driveway posting.
           </DialogTitle>
           <form onSubmit={this.props.handleSubmit} style={style.form}>
-            {this.props.submitError ? (
-              <div>
-                <Input
-                  error
-                  style={style.text}
-                  id="address"
-                  placeholder="Address"
-                  name="address"
-                  className={classes.textField}
-                />
-                <Input
-                  error
-                  style={style.text}
-                  id="city"
-                  placeholder="City"
-                  name="city"
-                  className={classes.textField}
-                />
-                <Input
-                  error
-                  style={style.text}
-                  id="state"
-                  placeholder="State"
-                  name="state"
-                  className={classes.textField}
-                />
-                <Input
-                  error
-                  style={style.text}
-                  id="zip"
-                  placeholder="Zip"
-                  name="zip"
-                  className={classes.textField}
-                />
-                <TimeDropDown error id={"timeStart"} />
-              </div>
-            ) : (
-              <div>
-                <Input
-                  style={style.text}
-                  id="address"
-                  placeholder="Address"
-                  name="address"
-                  className={classes.textField}
-                />
-                <Input
-                  style={style.text}
-                  id="city"
-                  placeholder="City"
-                  name="city"
-                  className={classes.textField}
-                />
-                <Input
-                  style={style.text}
-                  id="state"
-                  placeholder="State"
-                  name="state"
-                  className={classes.textField}
-                />
-                <Input
-                  style={style.text}
-                  id="zip"
-                  placeholder="Zip"
-                  name="zip"
-                  className={classes.textField}
-                />
-                <TimeDropDown  id={"timeEnd"} />
-              </div>
-            )}
+            <div>
+              <Input
+                error={this.props.submitError}
+                style={style.text}
+                id="address"
+                placeholder="Address"
+                name="address"
+                className={classes.textField}
+              />
+              <Input
+                error={this.props.submitError}
+                style={style.text}
+                id="city"
+                placeholder="City"
+                name="city"
+                className={classes.textField}
+              />
+              <Input
+                error={this.props.submitError}
+                style={style.text}
+                id="state"
+                placeholder="State"
+                name="state"
+                className={classes.textField}
+              />
+              <Input
+                error={this.props.submitError}
+                style={style.text}
+                id="zip"
+                placeholder="Zip"
+                name="zip"
+                className={classes.textField}
+              />
+            </div>
+
+            <Select
+              error={this.props.timeError || this.props.submitError}
+              value={this.props.startTime}
+              onChange={this.props.handleStartChange}
+              inputProps={{
+                name: "start",
+                id: "start-hour"
+              }}
+              style={style.text}
+              MenuProps={MenuProps}
+            >
+              <MenuItem value="none" disabled>
+                <em>Choose a Start Time</em>
+              </MenuItem>
+              {hours}
+            </Select>
+            <Select
+              error={this.props.timeError|| this.props.submitError}
+              value={this.props.endTime}
+              onChange={this.props.handleEndChange}
+              style={style.text}
+              inputProps={{
+                name: "end",
+                id: "end-hour"
+              }}
+              MenuProps={MenuProps}
+            >
+              <MenuItem value="none" disabled>
+                <em>Choose an End Time</em>
+              </MenuItem>
+              {hours}
+            </Select>
+
             <Input
               style={style.text}
               id="rateDay"
@@ -195,12 +217,24 @@ class CreateDriveway extends Component {
               className={classes.textField}
             />
             <input
-              id="drivewayImage"
+              style={{ display: "none" }}
+              id="driveway-image-upload"
               type="file"
-              name="photo"
-              accept=".png, .jpg, .jpeg"
-              style={style.pictureUpload}
+              className={classes.input}
+              multiple
+              accept="image/*"
             />
+            <div className="flexRow" style={{ marginTop: 20 }}>
+              <label htmlFor="driveway-image-upload">
+                <Button
+                  variant="contained"
+                  component="span"
+                  className={classes.button}
+                >
+                  <InsertPhotoIcon className={classes.rightIcon} /> Upload
+                </Button>
+              </label>
+            </div>
             <div className="flexRow" style={{ marginTop: 20 }}>
               <Button variant="contained" onClick={this.props.handleClose}>
                 Close
